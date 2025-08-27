@@ -6,10 +6,14 @@ export function ConvertImageToGrayscale(arg1) {
   return window['go']['main']['App']['ConvertImageToGrayscale'](arg1);
 }
 
-export function FetchImage() {
-  return window['go']['main']['App']['FetchImage']();
+export function DecodeImage(arg1) {
+  return window['go']['main']['App']['DecodeImage'](arg1);
 }
 
-export function Greet(arg1) {
-  return window['go']['main']['App']['Greet'](arg1);
+export function EncodeImageToBase64(arg1) {
+  return window['go']['main']['App']['EncodeImageToBase64'](arg1);
+}
+
+export function FetchImageAsBytes() {
+  return window['go']['main']['App']['FetchImageAsBytes']();
 }

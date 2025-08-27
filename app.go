@@ -1,13 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
-	"fmt"
 	"image"
 	"image/draw"
 	"image/jpeg"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -31,12 +30,7 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
-}
-
-func (a *App) FetchImage() string {
+func (a *App) FetchImageAsBytes() []byte {
 	path, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select an image",
 		Filters: []runtime.FileFilter{
@@ -55,9 +49,13 @@ func (a *App) FetchImage() string {
 		log.Fatal(err)
 	}
 
+	return bytes
+}
+
+func (a *App) EncodeImageToBase64(imageBytes []byte) string {
 	var base64Encoding string
 
-	mimeType := http.DetectContentType(bytes)
+	mimeType := http.DetectContentType(imageBytes)
 
 	switch mimeType {
 	case "image/jpeg":
@@ -67,32 +65,32 @@ func (a *App) FetchImage() string {
 	}
 
 	// Append the base64 encoded output
-	base64Encoding += base64.StdEncoding.EncodeToString(bytes)
-
-	fmt.Println(base64Encoding)
-
-	// file, err := os.Open(path)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// defer file.Close()
-
-	// img, err := jpeg.Decode(file)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	base64Encoding += base64.StdEncoding.EncodeToString(imageBytes)
 
 	return base64Encoding
 }
 
-func (a *App) ConvertImageToGrayscale(img image.Image) io.Writer {
-	var grayScaleImage io.Writer
+func (a *App) DecodeImage(imageBytes []byte) image.Image {
+	byteReader := bytes.NewReader(imageBytes)
+
+	// TODO - Make it decode jpeg and png (maybe other image formats in the future)
+	img, err := jpeg.Decode(byteReader)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return img
+}
+
+func (a *App) ConvertImageToGrayscale(imageBytes []byte) []byte {
+	img := a.DecodeImage(imageBytes)
+
+	var grayScaleImage bytes.Buffer
 
 	result := image.NewGray(img.Bounds())
 	draw.Draw(result, result.Bounds(), img, img.Bounds().Min, draw.Src)
 
-	jpeg.Encode(grayScaleImage, result, nil)
+	jpeg.Encode(&grayScaleImage, result, nil)
 
-	return grayScaleImage
+	return grayScaleImage.Bytes()
 }
