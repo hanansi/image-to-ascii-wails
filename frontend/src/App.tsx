@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import logo from './assets/images/logo-universal.png';
 import './App.css';
-import {ConvertImageToGrayscale, EncodeImageToBase64, FetchImageAsBytes} from "../wailsjs/go/main/App";
+import {ConvertImageToAscii, ConvertImageToGrayscale, EncodeImageToBase64, FetchImageAsBytes, PrintAscii} from "../wailsjs/go/main/App";
 
 function App() {
     const [imagePath, setImagePath] = useState("");
@@ -14,9 +14,11 @@ function App() {
         let imageSrc = await EncodeImageToBase64(bytes);
         updateImagePath(imageSrc);
 
-        let grayScaleImage = await ConvertImageToGrayscale(bytes);
-        let convertedImageSrc = await EncodeImageToBase64(grayScaleImage);
+        let grayScaleImageBytes = await ConvertImageToGrayscale(bytes);
+        let convertedImageSrc = await EncodeImageToBase64(grayScaleImageBytes);
         updateConvertedImagePath(convertedImageSrc);
+        let asciiTest = await ConvertImageToAscii(grayScaleImageBytes);
+        PrintAscii(asciiTest)
     }
 
     return (

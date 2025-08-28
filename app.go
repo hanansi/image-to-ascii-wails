@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"fmt"
 	"image"
 	"image/draw"
 	"image/jpeg"
@@ -23,6 +24,8 @@ type App struct {
 func NewApp() *App {
 	return &App{}
 }
+
+const asciiChar string = "`^\",:;Il!i~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
 
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
@@ -93,4 +96,38 @@ func (a *App) ConvertImageToGrayscale(imageBytes []byte) []byte {
 	jpeg.Encode(&grayScaleImage, result, nil)
 
 	return grayScaleImage.Bytes()
+}
+
+func (a *App) ConvertImageToAscii(imageBytes []byte) [][]string {
+	var asciiRep [][]string
+
+	img := a.DecodeImage(imageBytes)
+
+	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+		var row []string
+		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
+			pixelColor := img.At(x, y)
+			r, g, b, _ := pixelColor.RGBA()
+			pixelLuminance := a.calculateLuminance(r, g, b) // TODO - Change this to use color model conversion
+			asciiIndex := int(pixelLuminance) * ((len(asciiChar) - 1) / 255)
+			row = append(row, string(asciiChar[asciiIndex]))
+		}
+
+		asciiRep = append(asciiRep, row)
+	}
+
+	return asciiRep
+}
+
+func (a *App) PrintAscii(asciiRep [][]string) {
+	for i := 0; i < len(asciiRep); i++ {
+		for j := 0; j < len(asciiRep[0]); j++ {
+			fmt.Print(asciiRep[i][j])
+		}
+		fmt.Println()
+	}
+}
+
+func (a *App) calculateLuminance(r, g, b uint32) uint8 {
+	return uint8(0.2126*float64(r) + 0.7152*float64(g) + 0.0722*float64(b))
 }
