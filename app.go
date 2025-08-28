@@ -6,13 +6,14 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image"
-	"image/draw"
+	"image/color"
 	"image/jpeg"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"golang.org/x/image/draw"
 )
 
 // App struct
@@ -25,12 +26,20 @@ func NewApp() *App {
 	return &App{}
 }
 
-const asciiChar string = "`^\",:;Il!i~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+const asciiChar string = "$@B%#*+=,....."
 
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+}
+
+func ResizeImage(img image.Image, width int) image.Image {
+	bounds := img.Bounds()
+	height := (bounds.Dy() * width) / bounds.Dx()
+	newImage := image.NewRGBA(image.Rect(0, 0, width, height))
+	draw.CatmullRom.Scale(newImage, newImage.Bounds(), img, bounds, draw.Over, nil)
+	return newImage
 }
 
 func (a *App) FetchImageAsBytes() []byte {
@@ -98,33 +107,33 @@ func (a *App) ConvertImageToGrayscale(imageBytes []byte) []byte {
 	return grayScaleImage.Bytes()
 }
 
-func (a *App) ConvertImageToAscii(imageBytes []byte) [][]string {
-	var asciiRep [][]string
+func (a *App) ConvertImageToAscii(imageBytes []byte) []string {
+	oldImage := a.DecodeImage(imageBytes)
+	img := ResizeImage(oldImage, 480)
 
-	img := a.DecodeImage(imageBytes)
+	result := make([]string, img.Bounds().Dy())
 
 	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
-		var row []string
+		var line string
 		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
-			pixelColor := img.At(x, y)
-			r, g, b, _ := pixelColor.RGBA()
-			pixelLuminance := a.calculateLuminance(r, g, b) // TODO - Change this to use color model conversion
-			asciiIndex := int(pixelLuminance) * ((len(asciiChar) - 1) / 255)
-			row = append(row, string(asciiChar[asciiIndex]))
+			// pixelColor := img.At(x, y)
+			// r, g, b, _ := pixelColor.RGBA()
+			// pixelLuminance := a.calculateLuminance(r, g, b) // TODO - Change this to use color model conversion
+			pixelValue := color.GrayModel.Convert(img.At(x, y)).(color.Gray)
+			pixel := pixelValue.Y
+			asciiIndex := int(pixel) * (len(asciiChar) - 1) / 255
+			line += string(asciiChar[asciiIndex])
 		}
 
-		asciiRep = append(asciiRep, row)
+		result[y] = line
 	}
 
-	return asciiRep
+	return result
 }
 
-func (a *App) PrintAscii(asciiRep [][]string) {
+func (a *App) PrintAscii(asciiRep []string) {
 	for i := 0; i < len(asciiRep); i++ {
-		for j := 0; j < len(asciiRep[0]); j++ {
-			fmt.Print(asciiRep[i][j])
-		}
-		fmt.Println()
+		fmt.Println(asciiRep[i])
 	}
 }
 

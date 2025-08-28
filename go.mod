@@ -2,7 +2,10 @@ module image-to-ascii-desktop
 
 go 1.23
 
-require github.com/wailsapp/wails/v2 v2.10.2
+require (
+	github.com/wailsapp/wails/v2 v2.10.2
+	golang.org/x/image v0.12.0
+)
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect
