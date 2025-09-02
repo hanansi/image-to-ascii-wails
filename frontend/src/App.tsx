@@ -1,42 +1,58 @@
 import {useState} from 'react';
-import logo from './assets/images/logo-universal.png';
 import './App.css';
-import {ConvertImageToAscii, ConvertImageToGrayscale, EncodeImageToBase64, FetchImageAsBytes, PrintAscii} from "../wailsjs/go/main/App";
+import {ConvertImageToAscii, ConvertImageToGrayscale, EncodeImageToBase64, FetchImageAsBytes} from "../wailsjs/go/main/App";
 
 function App() {
     const [imagePath, setImagePath] = useState("");
     const [convertedImagePath, setConvertedImagePath] = useState("")
+    const [asciiText, setAsciiText] = useState([""]);
     const updateImagePath = (src: string) => setImagePath(src);
     const updateConvertedImagePath = (src: string) => setConvertedImagePath(src);
+    const updateAsciiText = (asciiText: string[]) => setAsciiText(asciiText);
 
     async function fetchImage() {
         let bytes = await FetchImageAsBytes();
+
+        if (!bytes) return;
+
         let imageSrc = await EncodeImageToBase64(bytes);
         updateImagePath(imageSrc);
 
         let grayScaleImageBytes = await ConvertImageToGrayscale(bytes);
         let convertedImageSrc = await EncodeImageToBase64(grayScaleImageBytes);
         updateConvertedImagePath(convertedImageSrc);
-        let asciiTest = await ConvertImageToAscii(grayScaleImageBytes);
-        PrintAscii(asciiTest)
+        let asciiText = await ConvertImageToAscii(grayScaleImageBytes);
+        updateAsciiText(asciiText);
     }
 
     return (
-        <div id="App">
-            <h1 className="text-3xl font-bold underline">Image to ASCII Converter</h1>
-            <div id="input" className="input-box">
-                <button className="btn" id="image-file" onClick={fetchImage}>Choose image</button>
+        <div id="App" className="flex flex-col gap-4 justify-start bg-black h-screen w-screen">
+            <h1 className="pt-4 text-2xl font-bold underline">Image to ASCII Converter</h1>
+            <div id="input">
+                <button className="bg-gradient-to-b from-blue-500 to-purple-500 rounded-md size-36 cursor-pointer
+                                    hover:bg-gradient-to-l hover:from-red-500 hover:to-yellow-500" 
+                                    id="image-file" onClick={fetchImage}>
+                    <p className="font-bold">Upload Your Photo</p>
+                    <p>(jpg/jpeg and png)</p>
+                </button>
             </div>
-            {imagePath && <img src={imagePath} id="image" alt="Random image" />}
-            {convertedImagePath && <img src={convertedImagePath} id="grayscale-image" alt="Random grayscale image" />}
-            
-            {/* <img src={logo} id="logo" alt="logo"/>
-            <div id="result" className="result">{resultText}</div>
-            <div id="input" className="input-box">
-                <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text"/>
-                <button className="btn" onClick={greet}>Greet</button>
-            </div> */}
-
+            {(imagePath || asciiText) && (
+                <div className="flex flex-row gap-4 justify-center items-start p-4">
+                    {/* {imagePath && (
+                        <img
+                            src={imagePath}
+                            alt="Uploaded"
+                            className="max-w-[45%] rounded-lg shadow-lg"
+                        />
+                    )} */}
+                    {asciiText && (
+                        <pre className="text-sm text-green-400">
+                            {asciiText.join("\n")}
+                        </pre>
+                        )
+                    }
+                </div>
+            )}
         </div>
     )
 }

@@ -8,6 +8,7 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
+	"image/png"
 	"log"
 	"net/http"
 	"os"
@@ -25,8 +26,6 @@ type App struct {
 func NewApp() *App {
 	return &App{}
 }
-
-const asciiChar string = "$@B%#*+=,....."
 
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
@@ -54,11 +53,18 @@ func (a *App) FetchImageAsBytes() []byte {
 	})
 	if err != nil {
 		log.Fatal(err)
+		return nil
+	}
+
+	if path == "" {
+		log.Print("No file selected.")
+		return nil
 	}
 
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)
+		return nil
 	}
 
 	return bytes
@@ -83,10 +89,19 @@ func (a *App) EncodeImageToBase64(imageBytes []byte) string {
 }
 
 func (a *App) DecodeImage(imageBytes []byte) image.Image {
+	var img image.Image
+	var err error
 	byteReader := bytes.NewReader(imageBytes)
 
-	// TODO - Make it decode jpeg and png (maybe other image formats in the future)
-	img, err := jpeg.Decode(byteReader)
+	mimeType := http.DetectContentType(imageBytes)
+
+	switch mimeType {
+	case "image/jpeg":
+		img, err = jpeg.Decode(byteReader)
+	case "image/png":
+		img, err = png.Decode(byteReader)
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,19 +112,20 @@ func (a *App) DecodeImage(imageBytes []byte) image.Image {
 func (a *App) ConvertImageToGrayscale(imageBytes []byte) []byte {
 	img := a.DecodeImage(imageBytes)
 
-	var grayScaleImage bytes.Buffer
+	buf := new(bytes.Buffer)
 
 	result := image.NewGray(img.Bounds())
 	draw.Draw(result, result.Bounds(), img, img.Bounds().Min, draw.Src)
 
-	jpeg.Encode(&grayScaleImage, result, nil)
+	jpeg.Encode(buf, result, nil)
 
-	return grayScaleImage.Bytes()
+	return buf.Bytes()
 }
 
 func (a *App) ConvertImageToAscii(imageBytes []byte) []string {
+	const asciiChar string = "$@B%#*+=,. " //"$@B%#*+=,....."
 	oldImage := a.DecodeImage(imageBytes)
-	img := ResizeImage(oldImage, 480)
+	img := ResizeImage(oldImage, 80)
 
 	result := make([]string, img.Bounds().Dy())
 
@@ -118,7 +134,7 @@ func (a *App) ConvertImageToAscii(imageBytes []byte) []string {
 		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
 			// pixelColor := img.At(x, y)
 			// r, g, b, _ := pixelColor.RGBA()
-			// pixelLuminance := a.calculateLuminance(r, g, b) // TODO - Change this to use color model conversion
+			// pixelLuminance := a.calculateLuminance(r, g, b)
 			pixelValue := color.GrayModel.Convert(img.At(x, y)).(color.Gray)
 			pixel := pixelValue.Y
 			asciiIndex := int(pixel) * (len(asciiChar) - 1) / 255
