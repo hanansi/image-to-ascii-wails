@@ -11,5 +11,3 @@ export function DecodeImage(arg1:Array<number>):Promise<image.Image>;
 export function EncodeImageToBase64(arg1:Array<number>):Promise<string>;
 
 export function FetchImageAsBytes():Promise<Array<number>>;
-
-export function PrintAscii(arg1:Array<string>):Promise<void>;

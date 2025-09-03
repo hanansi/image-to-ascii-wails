@@ -21,7 +21,3 @@ export function EncodeImageToBase64(arg1) {
 export function FetchImageAsBytes() {
   return window['go']['main']['App']['FetchImageAsBytes']();
 }
-
-export function PrintAscii(arg1) {
-  return window['go']['main']['App']['PrintAscii'](arg1);
-}
