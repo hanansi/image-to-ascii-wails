@@ -1,13 +1,13 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "image-to-ascii-desktop",
+  "name": "Image to Ascii",
   "outputfilename": "image-to-ascii-desktop",
   "frontend:install": "npm install",
   "frontend:build": "npm run build",
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "Hanansi",
+    "email": "aidencastillo41@gmail.com"
   }
 }
