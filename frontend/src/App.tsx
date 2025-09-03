@@ -3,30 +3,22 @@ import './App.css';
 import {ConvertImageToAscii, ConvertImageToGrayscale, EncodeImageToBase64, FetchImageAsBytes} from "../wailsjs/go/main/App";
 
 function App() {
-    const [imagePath, setImagePath] = useState("");
-    // const [convertedImagePath, setConvertedImagePath] = useState("")
-    const [asciiText, setAsciiText] = useState([""]);
-    const updateImagePath = (src: string) => setImagePath(src);
-    // const updateConvertedImagePath = (src: string) => setConvertedImagePath(src);
-    const updateAsciiText = (asciiText: string[]) => setAsciiText(asciiText);
+    const [imagePath, setImagePath] = useState<string>("");
+    const [asciiText, setAsciiText] = useState<string[]>([]);
 
     // TODO - Make the UI look better
-    async function fetchImage() {
+    async function convertToAscii() {
         let bytes = await FetchImageAsBytes();
-        if (!bytes) return;
+        if (!bytes) return; // Prevents error from empty string
 
-        let imageSrc = await EncodeImageToBase64(bytes);
-        if (!imageSrc) return;
+        // let imageSrc = await EncodeImageToBase64(bytes);
+        // if (!imageSrc) return;
         
-        updateImagePath(imageSrc);
+        // setImagePath(imageSrc);
 
         let grayScaleImageBytes = await ConvertImageToGrayscale(bytes);
-
-        // let convertedImageSrc = await EncodeImageToBase64(grayScaleImageBytes);
-        // updateConvertedImagePath(convertedImageSrc);
-
         let asciiText = await ConvertImageToAscii(grayScaleImageBytes);
-        updateAsciiText(asciiText);
+        setAsciiText(asciiText);
     }
 
     return (
@@ -35,7 +27,7 @@ function App() {
             <div>
                 <button className="bg-gradient-to-b from-blue-500 to-purple-500 rounded-md size-36 cursor-pointer
                                     hover:bg-gradient-to-l hover:from-red-500 hover:to-yellow-500" 
-                                    id="image-file" onClick={fetchImage}>
+                                    id="image-file" onClick={convertToAscii}>
                     <p className="font-bold">Upload Your Photo</p>
                     <p>(jpg/jpeg and png)</p>
                 </button>
